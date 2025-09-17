@@ -336,6 +336,7 @@
     * [Rotation](digital_image_processing/rotation/rotation.py)
   * [Sepia](digital_image_processing/sepia.py)
   * [Test Digital Image Processing](digital_image_processing/test_digital_image_processing.py)
+  * [Wavelet Denoising](digital_image_processing/wavelet_denoising.py)
 
 ## Divide And Conquer
   * [Closest Pair Of Points](divide_and_conquer/closest_pair_of_points.py)
