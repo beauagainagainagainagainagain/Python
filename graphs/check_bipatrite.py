@@ -1,7 +1,24 @@
 from collections import defaultdict, deque
+from collections.abc import Iterable, Mapping
 
 
-def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
+Graph = Mapping[int, Iterable[int]]
+_MISSING = object()
+
+
+def _iter_neighbors(graph: Graph, node: int) -> Iterable[int]:
+    neighbors = graph.get(node, _MISSING)
+    if neighbors is not _MISSING:
+        return neighbors
+
+    default_factory = getattr(graph, "default_factory", None)
+    if callable(default_factory):
+        return default_factory()
+
+    raise KeyError(node)
+
+
+def is_bipartite_dfs(graph: Graph) -> bool:
     """
     Check if a graph is bipartite using depth-first search (DFS).
 
@@ -15,11 +32,8 @@ def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
     vertices within the same set are connected by an edge.
 
     Examples:
-    # FIXME: This test should pass.
     >>> is_bipartite_dfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 4]}))
-    Traceback (most recent call last):
-        ...
-    RuntimeError: dictionary changed size during iteration
+    True
     >>> is_bipartite_dfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 1]}))
     False
     >>> is_bipartite_dfs({})
@@ -78,7 +92,7 @@ def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
         """
         if visited[node] == -1:
             visited[node] = color
-            for neighbor in graph[node]:
+            for neighbor in _iter_neighbors(graph, node):
                 if not depth_first_search(neighbor, 1 - color):
                     return False
         return visited[node] == color
@@ -90,7 +104,7 @@ def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
     return True
 
 
-def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
+def is_bipartite_bfs(graph: Graph) -> bool:
     """
     Check if a graph is bipartite using a breadth-first search (BFS).
 
@@ -104,11 +118,8 @@ def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
     vertices within the same set are connected by an edge.
 
     Examples:
-    # FIXME: This test should pass.
     >>> is_bipartite_bfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 4]}))
-    Traceback (most recent call last):
-        ...
-    RuntimeError: dictionary changed size during iteration
+    True
     >>> is_bipartite_bfs(defaultdict(list, {0: [1, 2], 1: [0, 2], 2: [0, 1]}))
     False
     >>> is_bipartite_bfs({})
@@ -160,7 +171,7 @@ def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
             visited[node] = 0
             while queue:
                 curr_node = queue.popleft()
-                for neighbor in graph[curr_node]:
+                for neighbor in _iter_neighbors(graph, curr_node):
                     if visited[neighbor] == -1:
                         visited[neighbor] = 1 - visited[curr_node]
                         queue.append(neighbor)
