@@ -6,12 +6,14 @@ keras
 lxml
 matplotlib
 numpy
+PyWavelets
 opencv-python
 pandas
 pdfkit
 pillow
 requests
 rich
+scikit-image
 scikit-learn
 sphinx_pyproject
 statsmodels
