@@ -1357,6 +1357,7 @@
   * [Get Top Billionaires](web_programming/get_top_billionaires.py)
   * [Get Top Hn Posts](web_programming/get_top_hn_posts.py)
   * [Giphy](web_programming/giphy.py)
+  * [Github Gist](web_programming/github_gist.py)
   * [Instagram Crawler](web_programming/instagram_crawler.py)
   * [Instagram Pic](web_programming/instagram_pic.py)
   * [Instagram Video](web_programming/instagram_video.py)
@@ -1368,4 +1369,5 @@
   * [Search Books By Isbn](web_programming/search_books_by_isbn.py)
   * [Slack Message](web_programming/slack_message.py)
   * [Test Fetch Github Info](web_programming/test_fetch_github_info.py)
+  * [Test Github Gist](web_programming/test_github_gist.py)
   * [World Covid19 Stats](web_programming/world_covid19_stats.py)
