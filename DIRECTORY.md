@@ -1273,6 +1273,10 @@
   * [Unknown Sort](sorts/unknown_sort.py)
   * [Wiggle Sort](sorts/wiggle_sort.py)
 
+## Source
+  * [Cgtrc Parser](source/cgtrc_parser.py)
+  * [Test Cgtrc Parser](source/test_cgtrc_parser.py)
+
 ## Strings
   * [Aho Corasick](strings/aho_corasick.py)
   * [Alternative String Arrange](strings/alternative_string_arrange.py)
