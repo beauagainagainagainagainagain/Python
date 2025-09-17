@@ -1,7 +1,11 @@
 from collections import defaultdict, deque
+from collections.abc import Iterable, Mapping
 
 
-def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
+Graph = Mapping[int, Iterable[int]]
+
+
+def is_bipartite_dfs(graph: Graph) -> bool:
     """
     Check if a graph is bipartite using depth-first search (DFS).
 
@@ -15,11 +19,8 @@ def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
     vertices within the same set are connected by an edge.
 
     Examples:
-    # FIXME: This test should pass.
     >>> is_bipartite_dfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 4]}))
-    Traceback (most recent call last):
-        ...
-    RuntimeError: dictionary changed size during iteration
+    True
     >>> is_bipartite_dfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 1]}))
     False
     >>> is_bipartite_dfs({})
@@ -84,13 +85,13 @@ def is_bipartite_dfs(graph: defaultdict[int, list[int]]) -> bool:
         return visited[node] == color
 
     visited: defaultdict[int, int] = defaultdict(lambda: -1)
-    for node in graph:
+    for node in list(graph):
         if visited[node] == -1 and not depth_first_search(node, 0):
             return False
     return True
 
 
-def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
+def is_bipartite_bfs(graph: Graph) -> bool:
     """
     Check if a graph is bipartite using a breadth-first search (BFS).
 
@@ -104,11 +105,8 @@ def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
     vertices within the same set are connected by an edge.
 
     Examples:
-    # FIXME: This test should pass.
     >>> is_bipartite_bfs(defaultdict(list, {0: [1, 2], 1: [0, 3], 2: [0, 4]}))
-    Traceback (most recent call last):
-        ...
-    RuntimeError: dictionary changed size during iteration
+    True
     >>> is_bipartite_bfs(defaultdict(list, {0: [1, 2], 1: [0, 2], 2: [0, 1]}))
     False
     >>> is_bipartite_bfs({})
@@ -153,7 +151,7 @@ def is_bipartite_bfs(graph: defaultdict[int, list[int]]) -> bool:
     KeyError: 'b'
     """
     visited: defaultdict[int, int] = defaultdict(lambda: -1)
-    for node in graph:
+    for node in list(graph):
         if visited[node] == -1:
             queue: deque[int] = deque()
             queue.append(node)
