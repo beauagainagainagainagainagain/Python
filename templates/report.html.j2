@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>CTRL Environmental Compliance Report</title>
+<style>
+body { background:#fff; color:#000; font-family:Arial, sans-serif; }
+header { background:#000; color:#fff; padding:20px; text-align:center; }
+h1 { color:#e10600; margin:0; text-transform:uppercase; }
+.meta { margin-top:10px; }
+table { border-collapse:collapse; width:100%; }
+th, td { border:1px solid #000; padding:4px; }
+</style>
+</head>
+<body>
+<header>
+  <img src="{{ metadata.logo }}" alt="CTRL Logo" style="max-height:80px;" />
+  <h1>Compliance Dashboard</h1>
+  <div class="meta">
+    <strong>Site:</strong> {{ metadata.site }} |
+    <strong>Client:</strong> {{ metadata.client }} |
+    <strong>Inspector:</strong> {{ metadata.inspector }} |
+    <strong>Date:</strong> {{ metadata.date }}
+  </div>
+</header>
+<div class="table-container">
+  {{ table_html | safe }}
+</div>
+</body>
+</html>
