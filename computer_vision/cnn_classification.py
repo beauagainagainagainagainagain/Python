@@ -23,11 +23,20 @@ the image is present in.
 
 import numpy as np
 
-# Importing the Keras libraries and packages
-import tensorflow as tf
-from keras import layers, models
+try:  # pragma: no cover - optional dependency
+    # Importing the Keras libraries and packages
+    import tensorflow as tf
+    from keras import layers, models
+except Exception:  # pragma: no cover - handled gracefully at runtime
+    tf = None
+    layers = None
+    models = None
 
 if __name__ == "__main__":
+    if tf is None or layers is None or models is None:
+        raise ImportError(
+            "TensorFlow and Keras are required to run this example script."
+        )
     # Initialising the CNN
     # (Sequential- Building the model layer by layer)
     classifier = models.Sequential()

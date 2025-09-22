@@ -18,12 +18,26 @@ class CovidData(NamedTuple):
 
 def covid_stats(url: str = "https://www.worldometers.info/coronavirus/") -> CovidData:
     xpath_str = '//div[@class = "maincounter-number"]/span/text()'
-    return CovidData(
-        *html.fromstring(requests.get(url, timeout=10).content).xpath(xpath_str)
-    )
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        return CovidData(0, 0, 0)
+
+    values = html.fromstring(response.content).xpath(xpath_str)
+    try:
+        cases, deaths, recovered = (
+            int(value.replace(",", "")) for value in values[:3]
+        )
+    except (TypeError, ValueError):
+        return CovidData(0, 0, 0)
+    return CovidData(cases, deaths, recovered)
 
 
 fmt = """Total COVID-19 cases in the world: {}
 Total deaths due to COVID-19 in the world: {}
 Total COVID-19 patients recovered in the world: {}"""
-print(fmt.format(*covid_stats()))
+
+
+if __name__ == "__main__":
+    print(fmt.format(*covid_stats()))

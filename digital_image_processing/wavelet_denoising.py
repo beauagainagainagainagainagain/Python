@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pywt
-from skimage import data
-from skimage.metrics import peak_signal_noise_ratio
+
+try:
+    import pywt  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - optional dependency
+    pywt = None  # type: ignore[assignment]
+
+try:
+    from skimage import data  # type: ignore[import-not-found]
+    from skimage.metrics import peak_signal_noise_ratio  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - optional dependency
+    data = None  # type: ignore[assignment]
+    peak_signal_noise_ratio = None  # type: ignore[assignment]
 
 
 def im2double(image: np.ndarray) -> np.ndarray:
@@ -57,6 +67,12 @@ def denoise_image_wavelet(
         denoised images respectively.
     """
 
+    if pywt is None:
+        msg = "pywt is required for wavelet denoising; install PyWavelets to use this function."
+        raise ModuleNotFoundError(msg)
+
+    wavelet_module: Any = pywt
+
     if rng is None:
         rng = np.random.default_rng()
 
@@ -65,7 +81,7 @@ def denoise_image_wavelet(
     noisy_img = original_img + noise_level * rng.standard_normal(original_img.shape)
     noisy_img = normalize_img(noisy_img)
 
-    coeffs = pywt.wavedec2(noisy_img, wavelet_name, level=decomposition_level)
+    coeffs = wavelet_module.wavedec2(noisy_img, wavelet_name, level=decomposition_level)
     coeffs_approx = coeffs[0]
     coeffs_details = coeffs[1:]
 
@@ -83,12 +99,15 @@ def denoise_image_wavelet(
     threshold = sigma * math.sqrt(2.0 * math.log(original_img.size))
 
     denoised_details = [
-        tuple(pywt.threshold(detail_array, threshold, mode="soft") for detail_array in level_details)
+        tuple(
+            wavelet_module.threshold(detail_array, threshold, mode="soft")
+            for detail_array in level_details
+        )
         for level_details in coeffs_details
     ]
     coeffs_denoised = [coeffs_approx, *denoised_details]
 
-    denoised_img = pywt.waverec2(coeffs_denoised, wavelet_name)
+    denoised_img = wavelet_module.waverec2(coeffs_denoised, wavelet_name)
     denoised_img = denoised_img[: original_img.shape[0], : original_img.shape[1]]
     denoised_img = normalize_img(denoised_img)
 
@@ -97,6 +116,13 @@ def denoise_image_wavelet(
 
 def main() -> None:
     """Run the wavelet denoising example and display the results."""
+
+    if pywt is None:
+        msg = "pywt is required for the wavelet denoising demo. Install PyWavelets to run it."
+        raise SystemExit(msg)
+    if data is None or peak_signal_noise_ratio is None:
+        msg = "scikit-image is required for the wavelet denoising demo. Install scikit-image to run it."
+        raise SystemExit(msg)
 
     original_img = im2double(data.camera())
     noisy_img, denoised_img = denoise_image_wavelet(original_img)

@@ -1,3 +1,7 @@
+from pathlib import Path
+
 from sphinx_pyproject import SphinxConfig
 
-project = SphinxConfig("../pyproject.toml", globalns=globals()).name
+
+ROOT = Path(__file__).resolve().parents[1]
+project = SphinxConfig(ROOT / "pyproject.toml", globalns=globals()).name

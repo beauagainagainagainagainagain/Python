@@ -16,7 +16,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
-from jinja2 import Environment
+
+try:
+    from jinja2 import Environment
+except ImportError:  # pragma: no cover - optional dependency
+    Environment = None  # type: ignore[assignment]
 
 try:
     import pdfkit  # type: ignore[import-not-found]
@@ -134,6 +138,13 @@ def render_report(
 ) -> None:
     """Render *df* to HTML and optionally PDF."""
 
+    if Environment is None:
+        msg = (
+            "jinja2 is required to render the compliance dashboard; install Jinja2 to use "
+            "this feature."
+        )
+        raise ModuleNotFoundError(msg)
+
     table_html = build_table(df)
     env = Environment(autoescape=True)
     template = env.from_string(TEMPLATE)
@@ -170,7 +181,10 @@ def main() -> None:
         data["Category"] = data["Finding"].map(categorize_finding)
 
     meta = Metadata(args.site, args.client, args.inspector, args.date)
-    render_report(data, meta, args.logo, args.html, args.pdf)
+    try:
+        render_report(data, meta, args.logo, args.html, args.pdf)
+    except ModuleNotFoundError as exc:
+        raise SystemExit(str(exc)) from exc
     print(f"Report written to {args.html}")
 
 

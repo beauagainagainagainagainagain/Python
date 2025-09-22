@@ -1,7 +1,11 @@
 from random import shuffle
 
-import tensorflow as tf
 from numpy import array
+
+try:  # pragma: no cover - optional dependency
+    import tensorflow as tf
+except Exception:  # pragma: no cover - handled gracefully at runtime
+    tf = None
 
 
 def tf_k_means_cluster(vectors, noofclusters):
@@ -11,6 +15,9 @@ def tf_k_means_cluster(vectors, noofclusters):
     of vectors of dimensionality k.
     'noofclusters' should be an integer.
     """
+
+    if tf is None:
+        raise ImportError("TensorFlow is required to run tf_k_means_cluster")
 
     noofclusters = int(noofclusters)
     assert noofclusters < len(vectors)

@@ -1,8 +1,26 @@
+from __future__ import annotations
+
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
-from fake_useragent import UserAgent
 
 BASE_URL = "https://ww1.gogoanime2.org"
+
+DEFAULT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (compatible; FetchAnimeBot/1.0; +https://github.com/TheAlgorithms)"
+    )
+}
+
+
+def _get_html(url: str) -> str | None:
+    """Return the HTML content for *url* or ``None`` if the request fails."""
+
+    try:
+        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException:
+        return None
+    return response.text
 
 
 def search_scraper(anime_name: str) -> list:
@@ -27,15 +45,12 @@ def search_scraper(anime_name: str) -> list:
     # concat the name to form the search url.
     search_url = f"{BASE_URL}/search/{anime_name}"
 
-    response = requests.get(
-        search_url, headers={"UserAgent": UserAgent().chrome}, timeout=10
-    )  # request the url.
-
-    # Is the response ok?
-    response.raise_for_status()
+    html = _get_html(search_url)
+    if html is None:
+        return []
 
     # parse with soup.
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
 
     # get list of anime
     anime_ul = soup.find("ul", {"class": "items"})
@@ -82,17 +97,16 @@ def search_anime_episode_list(episode_endpoint: str) -> list:
 
     request_url = f"{BASE_URL}{episode_endpoint}"
 
-    response = requests.get(
-        url=request_url, headers={"UserAgent": UserAgent().chrome}, timeout=10
-    )
-    response.raise_for_status()
+    html = _get_html(request_url)
+    if html is None:
+        return []
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
 
     # With this id. get the episode list.
     episode_page_ul = soup.find("ul", {"id": "episode_related"})
     if episode_page_ul is None or isinstance(episode_page_ul, NavigableString):
-        msg = f"Could not find any anime eposiodes with name {anime_name}"
+        msg = f"Could not find any anime eposiodes with endpoint {episode_endpoint}"
         raise ValueError(msg)
     episode_page_li = episode_page_ul.children
 
@@ -133,12 +147,11 @@ def get_anime_episode(episode_endpoint: str) -> list:
 
     episode_page_url = f"{BASE_URL}{episode_endpoint}"
 
-    response = requests.get(
-        url=episode_page_url, headers={"User-Agent": UserAgent().chrome}, timeout=10
-    )
-    response.raise_for_status()
+    html = _get_html(episode_page_url)
+    if html is None:
+        return []
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
 
     url = soup.find("iframe", {"id": "playerframe"})
     if url is None or isinstance(url, NavigableString):

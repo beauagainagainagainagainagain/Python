@@ -7,11 +7,25 @@ An LSTM is a type of Recurrent Neural Network (RNN) as discussed at:
 
 import numpy as np
 import pandas as pd
-from keras.layers import LSTM, Dense
-from keras.models import Sequential
-from sklearn.preprocessing import MinMaxScaler
+
+try:  # pragma: no cover - optional dependency
+    from keras.layers import LSTM, Dense
+    from keras.models import Sequential
+except Exception:  # pragma: no cover - handled gracefully at runtime
+    LSTM = None
+    Dense = None
+    Sequential = None
+
+try:  # pragma: no cover - optional dependency
+    from sklearn.preprocessing import MinMaxScaler
+except Exception:  # pragma: no cover - handled gracefully at runtime
+    MinMaxScaler = None
 
 if __name__ == "__main__":
+    if None in {LSTM, Dense, Sequential, MinMaxScaler}:
+        raise ImportError(
+            "Keras and scikit-learn are required to run this example script."
+        )
     """
     First part of building a model is to get the data and prepare
     it for our model. You can use any dataset for stock prediction

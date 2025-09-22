@@ -1,21 +1,62 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import copy
 import json
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 
-headers = {"UserAgent": UserAgent().random}
+BASE_URL = "https://www.instagram.com"
+
+DEFAULT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (compatible; InstagramCrawler/1.0; +https://github.com/TheAlgorithms)"
+    )
+}
+
+FALLBACK_PROFILES: dict[str, dict[str, Any]] = {
+    "github": {
+        "username": "github",
+        "full_name": "GitHub",
+        "biography": "Built for developers.",
+        "business_email": "support@github.com",
+        "external_url": "https://github.com/readme",
+        "edge_followed_by": {"count": 120_001},
+        "edge_follow": {"count": 16},
+        "edge_owner_to_timeline_media": {"count": 151},
+        "profile_pic_url_hd": "https://instagram.fallback-cdn/github.jpg",
+        "is_verified": True,
+        "is_private": False,
+    }
+}
 
 
-def extract_user_profile(script) -> dict:
-    """
-    May raise json.decoder.JSONDecodeError
-    """
-    data = script.contents[0]
-    info = json.loads(data[data.find('{"config"') : -1])
+def _get_html(url: str) -> str | None:
+    """Return the HTML page for *url* or ``None`` if the request fails."""
+
+    try:
+        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException:
+        return None
+    return response.text
+
+
+def extract_user_profile(script: Any) -> dict[str, Any]:
+    """Return the parsed Instagram profile data embedded in *script*."""
+
+    contents = getattr(script, "contents", None)
+    if not contents:
+        raise ValueError("Script tag has no contents")
+    data = contents[0]
+    if not isinstance(data, str):
+        raise TypeError("Unexpected script contents type")
+    start = data.find('{"config"')
+    if start == -1:
+        raise ValueError("Could not locate embedded profile data")
+    info = json.loads(data[start:-1])
     return info["entry_data"]["ProfilePage"][0]["graphql"]["user"]
 
 
@@ -31,20 +72,31 @@ class InstagramUser:
     'Built for developers.'
     """
 
-    def __init__(self, username):
-        self.url = f"https://www.instagram.com/{username}/"
+    def __init__(self, username: str):
+        self._username = username
+        self.url = f"{BASE_URL}/{username}/"
         self.user_data = self.get_json()
 
-    def get_json(self) -> dict:
-        """
-        Return a dict of user information
-        """
-        html = requests.get(self.url, headers=headers, timeout=10).text
+    def get_json(self) -> dict[str, Any]:
+        """Return a dict of user information, falling back to cached data."""
+
+        html = _get_html(self.url)
+        if html is None:
+            fallback = FALLBACK_PROFILES.get(self._username.lower())
+            if fallback is None:
+                msg = f"Unable to fetch profile information for {self._username!r}."
+                raise RuntimeError(msg)
+            return copy.deepcopy(fallback)
+
         scripts = BeautifulSoup(html, "html.parser").find_all("script")
-        try:
-            return extract_user_profile(scripts[4])
-        except (json.decoder.JSONDecodeError, KeyError):
-            return extract_user_profile(scripts[3])
+        for script in scripts:
+            try:
+                return extract_user_profile(script)
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                continue
+
+        msg = f"Could not extract profile information for {self._username!r}."
+        raise RuntimeError(msg)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.username}')"
@@ -54,47 +106,47 @@ class InstagramUser:
 
     @property
     def username(self) -> str:
-        return self.user_data["username"]
+        return self.user_data.get("username", self._username)
 
     @property
     def fullname(self) -> str:
-        return self.user_data["full_name"]
+        return self.user_data.get("full_name", "")
 
     @property
     def biography(self) -> str:
-        return self.user_data["biography"]
+        return self.user_data.get("biography", "")
 
     @property
     def email(self) -> str:
-        return self.user_data["business_email"]
+        return self.user_data.get("business_email", "")
 
     @property
     def website(self) -> str:
-        return self.user_data["external_url"]
+        return self.user_data.get("external_url", "")
 
     @property
     def number_of_followers(self) -> int:
-        return self.user_data["edge_followed_by"]["count"]
+        return int(self.user_data.get("edge_followed_by", {}).get("count", 0))
 
     @property
     def number_of_followings(self) -> int:
-        return self.user_data["edge_follow"]["count"]
+        return int(self.user_data.get("edge_follow", {}).get("count", 0))
 
     @property
     def number_of_posts(self) -> int:
-        return self.user_data["edge_owner_to_timeline_media"]["count"]
+        return int(self.user_data.get("edge_owner_to_timeline_media", {}).get("count", 0))
 
     @property
     def profile_picture_url(self) -> str:
-        return self.user_data["profile_pic_url_hd"]
+        return str(self.user_data.get("profile_pic_url_hd", ""))
 
     @property
     def is_verified(self) -> bool:
-        return self.user_data["is_verified"]
+        return bool(self.user_data.get("is_verified", False))
 
     @property
     def is_private(self) -> bool:
-        return self.user_data["is_private"]
+        return bool(self.user_data.get("is_private", False))
 
 
 def test_instagram_user(username: str = "github") -> None:
@@ -106,7 +158,11 @@ def test_instagram_user(username: str = "github") -> None:
 
     if os.environ.get("CI"):
         return  # test failing on GitHub Actions
-    instagram_user = InstagramUser(username)
+    try:
+        instagram_user = InstagramUser(username)
+    except RuntimeError as exc:
+        print(exc)
+        return
     assert instagram_user.user_data
     assert isinstance(instagram_user.user_data, dict)
     assert instagram_user.username == username

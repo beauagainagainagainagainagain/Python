@@ -57,10 +57,10 @@ def avg_speed_of_molecule(temperature: float, molar_mass: float) -> float:
     and returns the average speed of a molecule in the gas (in m/s).
 
     Examples:
-    >>> avg_speed_of_molecule(273, 0.028) # nitrogen at 273 K
-    454.3488755020387
-    >>> avg_speed_of_molecule(300, 0.032) # oxygen at 300 K
-    445.52572733919885
+    >>> round(avg_speed_of_molecule(273, 0.028), 8) # nitrogen at 273 K
+    454.34887551
+    >>> round(avg_speed_of_molecule(300, 0.032), 8) # oxygen at 300 K
+    445.52572734
     >>> avg_speed_of_molecule(-273, 0.028) # invalid temperature
     Traceback (most recent call last):
         ...
@@ -84,10 +84,10 @@ def mps_speed_of_molecule(temperature: float, molar_mass: float) -> float:
     and returns the most probable speed of a molecule in the gas (in m/s).
 
     Examples:
-    >>> mps_speed_of_molecule(273, 0.028) # nitrogen at 273 K
-    402.65620701908966
-    >>> mps_speed_of_molecule(300, 0.032) # oxygen at 300 K
-    394.836895549922
+    >>> round(mps_speed_of_molecule(273, 0.028), 8) # nitrogen at 273 K
+    402.65620702
+    >>> round(mps_speed_of_molecule(300, 0.032), 8) # oxygen at 300 K
+    394.83689555
     >>> mps_speed_of_molecule(-273, 0.028) # invalid temperature
     Traceback (most recent call last):
         ...

@@ -21,11 +21,111 @@ import gzip
 import os
 import typing
 import urllib
+from pathlib import Path
 
 import numpy as np
-from tensorflow.python.framework import dtypes, random_seed
-from tensorflow.python.platform import gfile
-from tensorflow.python.util.deprecation import deprecated
+
+try:  # pragma: no cover - optional dependency
+    from tensorflow.python.framework import dtypes, random_seed
+    from tensorflow.python.platform import gfile
+    from tensorflow.python.util.deprecation import deprecated
+except Exception:  # pragma: no cover - use lightweight fallbacks
+    class _SimpleDType:
+        def __init__(self, dtype: typing.Any):
+            self._dtype = np.dtype(dtype)
+
+        @property
+        def base_dtype(self) -> "_SimpleDType":
+            return self
+
+        def __eq__(self, other: typing.Any) -> bool:
+            if isinstance(other, _SimpleDType):
+                return self._dtype == other._dtype
+            try:
+                return self._dtype == np.dtype(other)
+            except Exception:  # pragma: no cover - defensive
+                return False
+
+        def __hash__(self) -> int:  # pragma: no cover - allow use in sets
+            return hash(self._dtype.str)
+
+        def __repr__(self) -> str:  # pragma: no cover - debugging aid
+            return f"SimpleDType({self._dtype.name})"
+
+    class _DTypesModule:
+        float32 = _SimpleDType(np.float32)
+        uint8 = _SimpleDType(np.uint8)
+
+        @staticmethod
+        def as_dtype(value: typing.Any) -> _SimpleDType:
+            if isinstance(value, _SimpleDType):
+                return value
+            return _SimpleDType(value)
+
+    class _RandomSeedModule:
+        @staticmethod
+        def get_seed(seed: int | None) -> tuple[int, int]:
+            if seed is None:
+                rng = np.random.default_rng()
+                seeds = rng.integers(0, 2**31, size=2, dtype=np.int64)
+                return int(seeds[0]), int(seeds[1])
+            return int(seed), int(seed)
+
+    class _GFileHandle:
+        def __init__(self, filename: str | os.PathLike[str], mode: str = "rb"):
+            self._path = Path(filename)
+            self._mode = mode
+            self._fh = open(self._path, mode)
+
+        def __enter__(self) -> "_GFileHandle":
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self.close()
+
+        def read(self, *args, **kwargs):  # noqa: D401 - pass-through helper
+            return self._fh.read(*args, **kwargs)
+
+        def write(self, *args, **kwargs):  # pragma: no cover - rarely used
+            return self._fh.write(*args, **kwargs)
+
+        def size(self) -> int:
+            current = self._fh.tell()
+            self._fh.seek(0, os.SEEK_END)
+            size = self._fh.tell()
+            self._fh.seek(current, os.SEEK_SET)
+            return size
+
+        def close(self) -> None:
+            self._fh.close()
+
+    class _GFileModule:
+        @staticmethod
+        def Exists(path: str | os.PathLike[str]) -> bool:
+            return Path(path).exists()
+
+        @staticmethod
+        def MakeDirs(path: str | os.PathLike[str]) -> None:
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+        @staticmethod
+        def GFile(path: str | os.PathLike[str], mode: str = "rb") -> _GFileHandle:
+            return _GFileHandle(path, mode)
+
+        @staticmethod
+        def Open(path: str | os.PathLike[str], mode: str = "rb") -> _GFileHandle:
+            return _GFileHandle(path, mode)
+
+    def _no_op_deprecated(*_args, **_kwargs):  # pragma: no cover - decorator helper
+        def decorator(func):
+            return func
+
+        return decorator
+
+    dtypes = _DTypesModule()
+    random_seed = _RandomSeedModule()
+    gfile = _GFileModule()
+    deprecated = _no_op_deprecated
 
 
 class _Datasets(typing.NamedTuple):
