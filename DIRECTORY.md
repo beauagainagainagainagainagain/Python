@@ -178,6 +178,8 @@
   * [Volume Conversions](conversions/volume_conversions.py)
   * [Weight Conversion](conversions/weight_conversion.py)
 
+## [Cv2](/cv2.py)
+
 ## Data Structures
   * Arrays
     * [Equilibrium Index In Array](data_structures/arrays/equilibrium_index_in_array.py)
@@ -1334,6 +1336,14 @@
 
 ## Sustainability
   * [Ctrl Compliance Dashboard](sustainability/ctrl_compliance_dashboard.py)
+
+## Tests
+  * [Test Covid Stats Via Xpath](tests/test_covid_stats_via_xpath.py)
+  * [Test Cv2 Shim](tests/test_cv2_shim.py)
+  * [Test Optional Dependencies](tests/test_optional_dependencies.py)
+  * [Test Quantum Q Fourier Transform](tests/test_quantum_q_fourier_transform.py)
+  * [Test Speeds Of Gas Molecules](tests/test_speeds_of_gas_molecules.py)
+  * [Test Validate Filenames](tests/test_validate_filenames.py)
 
 ## Web Programming
   * [Co2 Emission](web_programming/co2_emission.py)
