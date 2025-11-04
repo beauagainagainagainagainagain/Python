@@ -861,6 +861,7 @@
   * [Doomsday](other/doomsday.py)
   * [Fischer Yates Shuffle](other/fischer_yates_shuffle.py)
   * [Gauss Easter](other/gauss_easter.py)
+  * [Google Gemini Use Case](other/google_gemini_use_case.py)
   * [Graham Scan](other/graham_scan.py)
   * [Greedy](other/greedy.py)
   * [Guess The Number Search](other/guess_the_number_search.py)
@@ -1367,6 +1368,9 @@
   * [Word Occurrence](strings/word_occurrence.py)
   * [Word Patterns](strings/word_patterns.py)
   * [Z Function](strings/z_function.py)
+
+## Tests
+  * [Test Google Gemini Use Case](tests/test_google_gemini_use_case.py)
 
 ## Web Programming
   * [Co2 Emission](web_programming/co2_emission.py)
