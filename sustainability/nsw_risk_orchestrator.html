@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NSW Suburb Environmental Risk Orchestrator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 2rem clamp(1rem, 5vw, 4rem);
+      line-height: 1.6;
+      background: radial-gradient(circle at top left, #f0f6ff 0%, #ffffff 55%);
+    }
+    header {
+      max-width: 60rem;
+      margin: 0 auto 2.5rem auto;
+      text-align: center;
+    }
+    header h1 {
+      margin-bottom: 0.3rem;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      color: #0a3d62;
+    }
+    header p {
+      margin-top: 0;
+      color: #1e4b6d;
+      font-size: clamp(1.05rem, 2.7vw, 1.3rem);
+    }
+    main {
+      max-width: 60rem;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 1.2rem;
+      box-shadow: 0 1.5rem 3.5rem rgba(10, 61, 98, 0.12);
+      padding: clamp(1.5rem, 4vw, 3rem);
+      backdrop-filter: blur(4px);
+    }
+    section + section {
+      margin-top: 2.5rem;
+    }
+    h2 {
+      margin-top: 0;
+      color: #0a3d62;
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+    }
+    h3 {
+      color: #144b73;
+      font-size: clamp(1.2rem, 2.5vw, 1.4rem);
+    }
+    ul, ol {
+      padding-left: 1.2rem;
+    }
+    code, pre {
+      font-family: "Fira Code", "Source Code Pro", monospace;
+    }
+    pre {
+      background: rgba(14, 62, 102, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 0.2rem 0.75rem;
+      background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+      color: #fff;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #5f7c96;
+      font-size: 0.9rem;
+    }
+    a {
+      color: #0a3d62;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="pill">Environmental Intelligence</span>
+    <h1>NSW Suburb Environmental Risk Orchestrator</h1>
+    <p>Generate 7-day erosion &amp; sediment control plus dust risk guidance for your active suburbs in New South Wales.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>
+        The orchestrator is an R script (<code>sustainability/nsw_risk_orchestrator.R</code>) that geocodes suburbs, locates their nearest Bureau of Meteorology forecast and observation stations, and
+        combines the results with customised scoring formulas to produce actionable risk collateral.
+      </p>
+      <p>
+        Outputs include per-suburb CSV schedules, trend charts, a Leaflet map, and an iCalendar feed for high-risk days—ready for CTRL Environmental workflows.
+      </p>
+    </section>
+
+    <section>
+      <h2>Prerequisites</h2>
+      <ul>
+        <li>R 4.1 or newer.</li>
+        <li>Internet access (for package installation, geocoding, and BoM data calls).</li>
+        <li>A CSV named <code>suburbs.csv</code> (or another file specified via <code>--input</code>) containing at least a <code>suburb</code> column.</li>
+      </ul>
+      <p>Optional columns:</p>
+      <ul>
+        <li><code>soil</code> &mdash; overrides the default soil type (LOAM).</li>
+        <li><code>latitude</code> / <code>longitude</code> &mdash; bypasses the geocoder if coordinates are already known.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Running the workflow</h2>
+      <ol>
+        <li>Place your <code>suburbs.csv</code> in the repository root (or provide an absolute path).</li>
+        <li>From a shell, execute:</li>
+      </ol>
+      <pre><code>Rscript sustainability/nsw_risk_orchestrator.R \
+  --input suburbs.csv \
+  --out risk_out \
+  --state NSW \
+  --threshold 60 \
+  --default-soil LOAM</code></pre>
+      <p>
+        All options are optional; values shown above are the defaults. The script will install required CRAN packages if missing (using the Posit CRAN mirror).
+      </p>
+    </section>
+
+    <section>
+      <h2>Key outputs</h2>
+      <ul>
+        <li><code>plan_&lt;suburb&gt;.csv</code> &mdash; tabular forecast with ESC/Dust scores, rain/wind context, and suggested actions.</li>
+        <li><code>trend_&lt;suburb&gt;.png</code> &mdash; seven-day chart highlighting thresholds, streaks, and change points.</li>
+        <li><code>map.html</code> &mdash; Leaflet map coloured by current day risk, including popup action prompts.</li>
+        <li><code>High-Risk.ics</code> &mdash; calendar entries for days meeting the threshold (default: score ≥ 60).</li>
+      </ul>
+      <p>
+        Files are written to the output directory chosen via <code>--out</code> (created automatically if it does not exist).
+      </p>
+    </section>
+
+    <section>
+      <h2>Scoring summary</h2>
+      <h3>ESC (Erosion &amp; Sediment Control)</h3>
+      <p>
+        Rainfall, wind, and peak temperature are weighted (58% / 28% / 14%) and adjusted by the soil susceptibility factor. Caps prevent runaway scores while still prioritising high-impact weather.
+      </p>
+      <h3>Dust Risk</h3>
+      <p>
+        Dryness bonuses reward extended dry spells, while wind over 20 km/h and hot temperatures accelerate dust uplift. Recent rainfall (3 &amp; 7-day windows) dampens the score.
+      </p>
+      <p>
+        Action statements are generated automatically based on combined ESC/Dust severities.
+      </p>
+    </section>
+
+    <section>
+      <h2>Data sources</h2>
+      <ul>
+        <li><strong>Geocoding</strong>: <code>tidygeocoder</code> with the OpenStreetMap / Nominatim service (bias set via <code>--state</code>).</li>
+        <li><strong>Forecasts</strong>: Australian Bureau of Meteorology "precis" forecasts via the <code>bomrang::get_precis_forecast()</code> API.</li>
+        <li><strong>Rainfall history</strong>: Bureau of Meteorology daily observations fetched through <code>bomrang::get_historical()</code>.</li>
+      </ul>
+      <p>
+        Ensure downstream use complies with the respective provider terms of use (OpenStreetMap Nominatim usage policy and the Bureau of Meteorology data licence).
+      </p>
+    </section>
+
+    <section>
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>Geocoding failures:</strong> Ensure suburb names are valid NSW localities. You can supply coordinates directly to skip geocoding.</li>
+        <li><strong>BoM errors:</strong> Intermittent BoM outages can produce warnings; affected stations are skipped so other suburbs continue processing.</li>
+        <li><strong>Package installation prompts:</strong> Run the script with write access to your R library path or set <code>R_LIBS_USER</code> accordingly.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    &copy; CTRL Environmental &middot; Generated documentation for the NSW risk orchestration workflow.
+  </footer>
+</body>
+</html>
