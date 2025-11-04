@@ -1334,8 +1334,6 @@
 
 ## Sustainability
   * [Ctrl Compliance Dashboard](sustainability/ctrl_compliance_dashboard.py)
-  * [NSW Risk Orchestrator](sustainability/nsw_risk_orchestrator.R)
-  * [NSW Risk Orchestrator Guide](sustainability/nsw_risk_orchestrator.html)
 
 ## Web Programming
   * [Co2 Emission](web_programming/co2_emission.py)
